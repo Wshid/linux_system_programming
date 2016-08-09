@@ -1,0 +1,11 @@
+EBADF
+EINVAL
+EOVERFLOW
+ESPIPE
+
+파일 오프셋의 최대값은 off_t에 제약 됨
+    대부분의 아키텍쳐는 off_t를 C의 long 타입으로 정의
+    리눅스에서는 워드 크기(범용 레지스터 크기)
+
+하지만, 커널에서는 내부적으로 C의 long long 타입 사용
+    64비트에서는 문제가 되지 않으나 32비트에서는 EOVERFLOW가 발생할 수 있음
