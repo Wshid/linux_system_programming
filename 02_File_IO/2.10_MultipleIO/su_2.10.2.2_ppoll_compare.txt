@@ -1,0 +1,31 @@
+#define _GNU_SOURCE
+
+#include <poll.h>
+
+int ppoll(struct pollfd *fds, nfds_t nfds,
+            const struct timespec *timeout, const sigset_t *sigmask);
+            
+    pselect와는 다르게 ppoll은 리눅스에서만 사용 가능
+    나노초 단위까지 지정 가능하며, 블록할 시그널 집합은 sigmask 인자로
+    
+===
+2.10.3 poll과 select 비교
+
+poll과 select system call은 같은 작업을 수행하지만,
+    select와 비교했을때 효율적임
+    
+    - poll() / FD_MAX+1인자로 전달할 필요가 없음
+    - poll() / fd의 크기가 큰 경우에 더 효율적으로 동작
+                select()의 경우 그 비트까지 일일히 검사해야함
+    - select() / fd의 집합은 크기가 정해졌으므로 tradeoff 발생
+                poll의 경우 배열 하나만 사용하면 됨
+    - select() / fd를 반환하는 시점에서 초기화를 해주어야 함
+                / poll은 입력(events)과 출력(revents)를 구분하므로 변경할 필요 없음
+    - select() / timeout 인자는 반환시 미정 상태
+                코드의 이식성 높이려면 timeout 인자를 재 초기화 해야함. pselect()사용시 문제 없음
+
+select() 장점
+    - 상대적으로 이식성이 높음 // 몇몇은 poll 지원 x
+    - micro second가지 지정 가능
+
+epoll의 경우 poll이나 select보다 뛰어남. 추후 4장에서

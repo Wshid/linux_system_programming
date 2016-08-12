@@ -1,0 +1,61 @@
+#include<sys/select.h>
+    
+int select(int n, // 가장 큰 fd 숫자+1 // select 호출시 가장 큰 값을 알아낸수 +1을 해서 인자에 넘김
+            fd_set *readfds, //데이터가 읽기가 가능한지(block 안되고 read()가 가능여부
+            fd_set *writefds, // block 안되고 write()가능 여부
+            fd_set *exceptfds, // 예외 발생 | 대역 넘어서는 데이터(by socket)
+                                // 특정 집합이 NULL이라면 select()는 해당 이벤트를 검사하지 않음
+            struct timeval *timeout);
+    FD_CLR(int fd, fd_set *set);
+    FD_ISSET(int fd, fd_set *set);
+    FD_SET(int fd, fd_set *set);
+    FD_ZERO(fd_set *set);
+    
+fd가 입출력 준비가 되거나 옵션으로 시간이 경과하기 전까지만 block
+
+호출 성공시, IO대상으로 준비된 fd를 포함하도록 변경
+    7,9가 readfds에 있다면, 호출 반환시 7이 집합에 남아있을경우 7은 block 없이 읽기 가능
+
+
+#include<sys/time.h>
+
+struct timeval{
+    long tv_sec; //초
+    long tv_usec; // 마이크로초
+}
+timeout이 NULL이 아닐경우 준비된 fd가 없을 경우 이후에 반환
+
+select()호출 반환 후 다음 호출 전에 꼭 초기화를 해주어야 함
+    //시간이 reset되지 않는 경우가 있음
+    // timeout 변수가 둘다 0이면 호출 즉시 반환
+
+보통 fd는 매크로를 이용해서 정의
+
+FD_ZERO : 지정 집합 내 모든 fd 제거
+            보통 select()호출 전에 사용
+    fd_set writefds;
+    FD_ZERO(&writefds);
+
+FD_SET : 주어진 집합에 fd 추가
+FD_CLR : 주어진 집합에 fd 제거
+    FD_SET(fd, &writefds); // fd를 writefds에 추가
+    FD_CLR(fd, &writefds); // writefds에서 fd 제거
+
+FD_ISSET : 집합에 존재하는지 여부 검사
+            집합에 있으면, 0이아닌 정수
+            집합에 없다면, 0
+        보통 select()호출 반환 이후, 입출력 가능 여부 확인
+    
+    if(FD_ISSET(fd, &read_fds))
+        // fd에서 즉시 값 읽기 가능 
+        
+fd의 집합은 정적, FD_SETSIZE라는 최대값 존재, 1024        
+        
+
+select호출 성공시, 세 집합 중 IO가 준비된 fd의 개수 반환
+timeout 초과시, 0
+에러 발생시, -1, errno
+    EBADF : fd 유효 x
+    EINTR : 대기중에 SIG 발생, 재호출 가능
+    EINVAL : n이 음수 | timeout 유효 x
+    ENOMEM : 요청 처리하려는 mem이 충분 x

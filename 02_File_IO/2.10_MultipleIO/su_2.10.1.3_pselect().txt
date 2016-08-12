@@ -1,0 +1,35 @@
+#define _XOPEN_SOURCE 600
+#include <sys/select.h>
+
+int pselect(int n,
+            fd_set *readfds,
+            fd_set *writefds,
+            fd_set *exceptfds,
+            const struct timespec *timeout,
+            const sigset_t *sigmask);
+    
+FD_CLR(int fd, fd_set *set);
+FD_ISSET(int fd, fd_set *set);
+FD_SET(int fd, fd_set *set);
+FD_ZERO(fd_set *set);
+
+select()와의 차이
+    1. timespec 구초제 사용 // 초+나노초 조합
+        -> 실제로는 timeval, timespec 정확한 시간 구현은 안 됨
+    2. timeout 인자 변경이 없기 때문에 timeout 인자를 계속 초기화 해주어야 함
+    3. sigmask=NULL설정시, select()와 동일하게 작동
+
+#include<sys/time.h>
+
+struct timespec{
+    long tv_sec; // 초
+    long tv_nsec; // 나노 초
+}
+
+fd와 SIG사이의 경쟁 상태를 해결하기 위해 sigmask 인자를 추가한 것
+pselect()는 블록할 SIG 목록을 인자로 받아 SIG가 도착을 해도 처리를 우선 진행함.
+    block이 이미 된 SIG는 block이 해제될때까지 SIG처리를 하지 않음
+    
+    select()호출 직전에 SIG도착시. app은 무한정 블록이 되는 상황 방지
+    
+    호출 반환시, 과거의 sigmask 복구
