@@ -1,0 +1,37 @@
+리눅스 커널에서 입출력 구현 방법
+
+VFS(Virtual File System), Page cache, Page writeback(페이지 쓰기저장)
+이 세가지가 합쳐져서 최적의 입출력 구성
+
+네번째 하위 시스템인 IO Scheduler는 4장에서!
+
+
+VFS : 리눅스의 모든 fs의 기초가 되는 공통 파일 모델 제공
+    공통파일 모델 : func.pointer와 다양한 OOP접근을 통해 리눅스 커널에서 fs가 따라야하는 framework 제공
+        -> fs에 대한 요청 일반화
+        framework -> 읽기, 링크 생성, 동기화 같은 작업을 위한 훅(hook) 제공
+        hook -> 지원 가능한 연산을 수행하는 함수 등록
+    
+    파일시스템 간의 상당한 부분을 공통적인 부분으로 강제
+        VFS에서는 inode, superblock, directory entry와 같은 단어 사용
+        리눅스는 FAT과 NTFS를 문제없이 잘 지원
+
+VFS의 장점
+    하나의 System call로 어떤 매체의 어떠한 파일 시스템 읽기 가능
+    유틸리 하나로 특정 fs에서 다른 fs로 복사가 가능
+    모든 fs는 동일한 개념, interface, call을 지원
+
+Trap : 오류나 사용자 요청에 의해 소프트웨어가 발생시킨 인터럽트
+트랩 명령(인터럽트) : 유저 프로세스 모드에서 커널 프로세스 모드로 변경
+
+read 호출시
+    1. C 컴파일 중 , 적절한 트랩구문으로 변환될 Sys.call 정의
+    2. 사용자 영역의 ps에서 sys.call handler를 통해 커널로 트랩, read() 시스템 콜 진입
+    3. kernel은 fd를 다루는 객체가 무엇인지 확인
+    4. 객체와 연관된 읽기 함수 호출(fs의 관점에서 이 함수는 fs 코드의 일부)
+    5. 데이터를 읽은 후 read()를 호출한 사용자 영역으로 데이터 반환
+    5. sys.call.handler : 커널에서 읽은 데이터를 사용자 영역으로 복사
+    7. read() system call 반환, ps 계속 실행
+    
+VFS에서는 프로그래머에게 fs가 존재하는 물리적인 매체나 fs유형을 신경 쓸 필요가 없도록 해줌
+    read(), write()등은 커널이 지원하는 어떠한 fs나 매체에서도 사용이 가능함
