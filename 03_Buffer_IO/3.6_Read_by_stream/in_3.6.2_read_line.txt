@@ -1,0 +1,3 @@
+read to txt file line by line
+practice makes perfect
+What is your dream?

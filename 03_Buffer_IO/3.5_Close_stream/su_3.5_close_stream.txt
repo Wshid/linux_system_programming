@@ -1,0 +1,16 @@
+fclose()
+    스트림을 닫는 함수
+    버퍼에 쌓여있지만 아직 스트림에 쓰지 않은 데이터 먼저 처리
+    성공하면 0, 실패시 EOF, errno
+
+#include<stdio.h>
+    int fclose(FILE *stream);
+
+
+=== 3.5.1_close All of Stream
+
+fcloseall()함수 사용
+    stdin, stdout, stderr 포함 현재 ps에 관련된 모든 스트림 종료
+    
+    #define _GNU_SOURCE
+        int fcloseall(void);
