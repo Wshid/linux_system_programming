@@ -1,0 +1,44 @@
+readv() // fd에서 데이터를 읽어 count 수만큼 iov 버퍼에 저장
+
+#include<sys/uio.h>
+ssize_t readv(int fd, const struct iovec *iov, int count);
+                
+writev() // count 개수 만큼 iov에 있는 데이터를 fd에 기록
+
+ssize_t write(int fd, const struct iovec *iov, int count);
+
+read()와 write()와의 차이점으로는 여러개의 버퍼를 사용한다는 것
+
+struct iovec{ // 세그먼트라고 하는 독립적으로 분리된 버퍼를 의미
+    void *iov_base; // 버퍼의 시작 포인터
+    size_t iov_len // 버퍼의 크기(바이트)
+}
+
+세그먼트의 집합 : 벡터
+벡터의 각 세그먼트에는 데이터를 기록하거난 읽어올 수 있는
+    메모리 공간의 주소와 크기가 저장되어 있음
+
+readv() : 각 버퍼에 iov_len만큼만 채운 후, 다음 버퍼를 채움
+writev() : iov_len바이트 만큼 데이터를 쓴다음, 다음 버퍼에 내용 기록
+두 함수 모두 iov[0]에서 시작해서 iov[count-1]까지 세그먼트 순서로 동작
+
+
+호출 성공시 읽거나 쓴 바이트 반환
+    반환 값 = *iov_len과 같아야함
+에러 발생시 -1, errno
+    read와 write에 있는 에러 코드를 포함하며 2가지가 추가됨
+
+1. *lov_len > SSIZE_MAX ; errno=EINVAL
+2. count=0 ; ret=0
+3. count>IOV_MAX(1024) ; ret=-1, errno=EINVAL
+
+
+최적 count 찾기
+벡터 입출력 시에 커널에서는 각 세그먼트를 위한 내부 구조체를 반드시 할당함
+    크기 할당은 count 크기에 따라 동적으로
+최적화를 위해 count 값이 크기 않을때 사용할 작은 세그먼트 배열을 스택에 생성 후,
+    세그먼트를 위한 동적 할당이 일어나지 않도록 함
+현재 count=8이며, 8이하일때 커널 스택을 아주 효율적으로 사용
+
+벡터 입출력 연산시 세그먼트 수를 어느정도로 할지 모를때,
+8이나 그보다 작은 크기로 시도하는 것이 좋음

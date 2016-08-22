@@ -1,0 +1,45 @@
+epoll_ctl() // epoll 컨텍스트에 fd를 추가하거나 삭제함
+
+#include<sys/epoll.h>
+int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event);
+
+struct epoll_event{
+    __u32 events; /* events */
+    union{
+        void *ptr;
+        int fd;
+        __u32 u32;
+        __u64 u64;
+    } data;
+};
+
+호출 성공시 epoll instance는 epfd와 연결 됨
+op : fd가 가르키는 파일에 대한 작업 명시
+    EPOLL_CTL_ADD : epfd와 연관된 epoll instance가 fd와 연관된 파일 감시하도록 추가,
+                        이벤트는 event인자로 정의
+    EPOLL_CTL_DEL : epfd와 연관된 epoll instance에 fd를 감시하지 않도록 삭제
+    EPOLL_CTL_MOD : 기존에 감시하고 있던 fd에 대한 이벤트를 event에 명시된 내용으로 갱신
+    
+event : 작업의 동작에 대한 설명
+
+epoll_event events 필드
+    주어진 fd에서 감시할 이벤트의 목록 표시
+    OR로 묶을 수 있음
+        EPOLLERR : 해당 파일에서 발생하는 에러 상황.
+                    따로 지정하지 않아도 항상 감시
+        EPOLLET : 파일 감시시, edge-trigger 사용. // 기본 동작은 level-trigger
+        EPOLLHUP : 파일에서 발생하는 hangup 감시 // 따로 지정하지 않아도 감시
+        EPOLLIN : 파일 읽기가 지연되지 않고 바로 가능한지 감시
+        EPOLLONESHOT : 이벤트 발생후, 한번 파일 읽고나면 감시 x
+                        다시 활성화 하려면 EPOLL_CTL_MOD로 새로운 이벤트 값 설정해야함
+        EPOLLOUT : 파일 쓰기가 지연되지 않고 바로 가능한지 감시
+        EPOLLPRI : 즉시 읽어야할 OOB(Out Of Band)데이터 있는지 감시
+            TCP에서 전송되는 데이터는 스트림 기반으로, 보낸 순서대로 받음
+                -> 이 순서를 무시하고 보내는 메세지를 OOB라고 함.
+                흔히 사용되지는 않음
+
+data 필드 : 사용자 데이터를 위한 필드
+    요청한 이벤트가 사용자에게 반환될때 함께 반환됨
+    event.data.fd를 fd로 채워서, 이벤트가 발생했을때 어떤 fd를 확인해야하는지 확인하는 용도로 사용
+
+호출 성공시 0, 실패시 -1, errno

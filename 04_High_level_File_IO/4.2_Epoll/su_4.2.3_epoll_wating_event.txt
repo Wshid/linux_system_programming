@@ -1,0 +1,20 @@
+epoll_wait : epoll instance와 연관된 fd에 대한 이벤트 기다리기
+
+#include<sys/epoll.h>
+
+int epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout);
+
+timeout 밀리초 동안 epfd와 연관된 파일 이벤트를 기다림
+
+호출 성공시 events에는 해당 이벤트
+    파일이 읽기나 쓰기가 가능한 상태인지를 나타내는 epoll_event 구조체에 대한 포인터 기록
+    최대 maxevents 만큼의 이벤트가 기록됨
+    
+    발생한 이벤트 갯수를 반환
+    에러시 -1, errno 설정
+
+timeout=0이면, 이벤트가 발생하지 않아도 즉시 반환, 반환값은 0이됨
+timeout=-1이면, 이벤트가 발생할때까지 호출 반환 x
+
+epoll_event.events에는 발생한 이벤트 기록
+epoll_event.data에는 epoll_ctl 호출 전의 설정 값이 담김

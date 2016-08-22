@@ -1,0 +1,41 @@
+epoll(event poll)
+    v2.6: 에서 추가됨
+
+poll과 select는 실행할때마다 전체 fd를 요구
+    -> 모든 리스트를 검사하는 상황이 잦아지면 병목현상이 발생
+
+실제로 검사하는 부분과
+파일 디스크립터를 등록하는 부분 분리 => 병목현상 회피
+
+특정 sys.call에서 epoll 컨텍스트 초기화
+다른 sys.call에서 검사할 fd를 epoll에 등록 / 삭제
+세번째 sys.call에서 실제 이벤트 기다림
+
+====
+4.2.1. new epoll instance
+
+#include<sys/epoll.h>
+
+int epoll_create1(int flags);
+
+int epoll_create(int size) // epoll_create는 예전 방식 // kernel :2.6.27 | glibc :2.9일때만 사용 권장
+
+호출 성공시, 새로운 epoll 인스턴스 생성, 연관된 fd 반환
+    fd는 실제 파일과 연관이 없으며, epoll기능을 사용하는 다음 호출에 사용될 핸들임
+
+flag인자는 epoll 동작 조정, 현재 EPOLL_CLOSEXEC만 유효함
+    새 ps가 실행될 때 파일을 자동으로 닫아줌
+
+에러시 -1, errno
+    EINVAL : 잘못 된 flag
+    EMFILE : 사용자가 열 수 있는 최대 파일 수 초과
+    ENFILE : 시스템에서 열 수 있는 최대 파일 수 초과
+    ENOMEM : 작업을 수행하기 위한 메모리 부족
+
+
+int epfd;
+
+epfd=epoll_create1(0);
+if(epfd<0) perror("epoll_create1");
+
+polling이 끝난 뒤에는 close()사용해서 닫아주어야 함
