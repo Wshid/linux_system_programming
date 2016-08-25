@@ -1,0 +1,11 @@
+mmap()으로 생성한 맵핑을 해제하기 위해 munmap()
+
+#include<sys/mman.h>
+
+int munmap(void *addr, size_t len);
+    -> addr부터 len만큼 ps 주소공간내 존재하는 페이지 포함 맵핑 해제
+
+성공시 0, 실패시 -1, errno
+
+if(munmap(addr, len)==-1)
+    perror("munmap");

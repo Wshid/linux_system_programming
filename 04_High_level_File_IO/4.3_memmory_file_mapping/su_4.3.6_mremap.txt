@@ -1,0 +1,33 @@
+메모리 맵핑 영역 크기 확장 및 축소하기 위해 사용
+
+#define _GNU_SOURCE
+
+#include<sys/mman.h>
+
+void *mremap(void *addr, size_t old_size, size_t new_size, unsigned long flags);
+    [addr, addr+old_size) 영역을 new_size로 변경함
+    ps 주소공간에서 사용가능한 공간과 flags 값에 따라 맵핑 위치 변경도 가능함
+
+flags   0 // 기본값
+        MREMAP_MAYMOVE : 크기 변경 요청을 수행하는데
+                        필요하다면 맵핑의 위치 이동 가능하다고 커널에 알려줌
+                            -> 맵핑 위치 이동시킬 수 있으면 변경 요청 성공 가능성이 높아짐
+
+mremap()    메모리 맵핑의 시작 주소 반환
+            MAP_FAILED, errno 설정
+
+glibc같은 라이브러리는 malloc()로 할당된 크기 변경위해 realloc(),
+    이 함수 구현하기 위해 mremap() 자주사용
+    
+
+void *realloc(void *addr, size_t len)
+{
+    size_t old_size = look_up_mapping_size(addr);
+    void *p;
+    
+    p=mremap(addr, old_size, len, MREMAP_MAYMOVE);
+    if(p==MAP_FAILED)
+        return NULL;
+    return p;
+    
+} // malloc()할당이 유일한 익명 맵핑인 경우에만 동작

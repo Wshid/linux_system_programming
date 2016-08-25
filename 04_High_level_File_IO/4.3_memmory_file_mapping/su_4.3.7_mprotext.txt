@@ -1,0 +1,17 @@
+기존 메모리 영역에 대한 접근 권한 변경
+
+#include<sys/mman.h>
+
+int mprotext(const void *addr, size_t len, int prot);
+    [addr, addr+len)영역 내에 포함된 페이지의 보호모드 변경
+
+prot    PROT_NONE, PROT_READ, PROT_WRITE, PROT_EXEC
+
+mmap()으로 생성된 영역만 mprotect() 사용 가능
+
+mprotect - 성공시 0 / 실패시 -1, errno
+
+EACCES  메모리 영역을 prot 값으로 설정할 권한이 없음
+EINVAL  addr인자가 유효하지 않거나 페이지 크기로 정렬되지 않음
+ENOMEM  요청 처리에 필요한 커널 메모리가 충분하지 않음
+        주어진 메모리 영역중 한 페이지 이상이 ps 주소 공간에서 유효하지 않음
