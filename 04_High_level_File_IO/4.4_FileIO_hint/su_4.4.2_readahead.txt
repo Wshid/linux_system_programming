@@ -1,0 +1,13 @@
+kernel v2.6에서 추가됨
+    그 전에는 POSIX_FADV_WILLNEED와 동일한 동작방식을 위해 사용되었음
+
+fadvise()와는 달리 리눅스 전용 인터페이스임
+
+#define _GNU_SOURCE
+#include <fcntl.h>
+
+ssize_t readahead(int fd, off64_t offset, size_t count);
+    fd+offset에서 count만큼 페이지 캐시를 생성함
+
+성공시 0
+실패시 -1, errno

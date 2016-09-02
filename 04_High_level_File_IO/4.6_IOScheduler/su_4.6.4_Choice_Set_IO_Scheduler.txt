@@ -1,0 +1,15 @@
+기본 입출력 스켖ㄹ러 선택
+    iosched // 부팅시 커널 명령행 인자
+        cfq, deadline, noop 설정 가능
+        
+    각 장치에 대해
+        /sys/block/[device]/queue/scheduler에서 설정 가능
+
+# echo cfq > /sys/block/sda/queue/scheduler // sda에 cfq 설정
+
+/sys.../queue/iosched -> 입출력 스케줄러와 관련된 값을 얻거나 설정할 수 있는 파일 포함
+    수정시 root권한 필요
+
+
+입출력 서브시스템에 중립적인 프로그램 작성방법도 있지만
+    서브시스템에 대한 지식이 있다면 최적화된 코드 작성도 가능

@@ -1,0 +1,37 @@
+메모리맵핑에 대한 힌트가 아닌,  커널의 일반적인 FileIO에 대한 힌트를 제공하는 방법
+posix_fadvise와 readahead라는 두가지 인터페이스가 있음
+
+===== 4.4.1 posix_fadvise system call
+
+#include<fcntl.h>
+
+int posix_fadvise(int fd, off_t offset, off_t len, int advice)
+    // fd+offset에서 len만큼에 대한 힌트 제공
+        len=0 ; offset~파일끝 까지의 힌트 제공
+        len=0, offset=0 // 전체파일에 대한 힌트 제공 // 일반적인 사용법
+
+POSIX_FADV_NORMAL       특별한 힌트 제공 x, 평범하게 취급
+POSIX_FADV_RANDOM       지정한 범위 내에 있는 데이터에 랜덤 접근
+POSIX_FADV_SEQUENTIAL   지정 범위 내, 낮은 주소 -> 높은 주소, 순차적 접근
+POSIX_FADV_WILLNEED     지정 범위 내 데이터에 곧 접근
+POSIX_FADV_NOREUSE      곧 접근하지만, 한번만 접근
+POSIX_FADV_DONTNEED     지정 데이터에 당분간 접근 x
+
+
+현재 버전
+
+POSIX_FADV_NORMAL       평소와 마찬가지로 동작, 적당히 미리읽기
+POSIX_FADV_RANDOM       미리읽기 x, 매번 물리적 읽기마다 최소한의 데이터만
+POSIX_FADV_SEQUENTIAL   공격적인 미리읽기, winsize * 2
+POSIX_FADV_WILLNEED     미리읽기 활성화, 페이지를 메모리로 읽어들임
+POSIX_FADV_NOREUSE      POSIX_FADV_WILLNEED와 동일 동작,
+POSIX_FADV_DONTNEED     데이터 중 캐싱중인 데이터, 페이지 캐시에서 제거
+                        madvise()의 비슷함 함수와 다른 동작
+                    
+
+int ret;
+ret=posix_fadvise(fd, 0, 0, POSIX_FADV_RANDOM);
+if(ret==-1) perror("posix_fadvise");
+
+성공하면 0
+실패하면 -1, errno
