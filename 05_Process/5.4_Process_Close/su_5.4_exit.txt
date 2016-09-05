@@ -1,0 +1,36 @@
+#include<stdlib.h>
+
+void exit(int status);
+    status : 프로세스 종료 상태를 나타내는 값
+        status & 0377값이 부모 ps로 반환됨
+    
+
+EXIT_SUCESS | EXIT_FAILURE
+    0 : 성공 // 리눅스에서는 일반적으로..
+    not 0 : 실패
+
+정상적 종료 -> exit(EXIT_SUCESS);
+
+ps 종료 과정(exit)
+    1) atexit(), on_exit()에 등록된 함수가 있다면, 역순 호출
+    2) 열려있는 stdio buffer 비우기
+    3) tmpfile()함수를 통해 생성된 임시파일 제거
+
+    -> 사용자 영역에서 해야하는 모든 작업 종료
+
+이후, _exit() sys.call 실행 => 나머지 단계, 커널 처리
+
+#include<unistd.h>
+
+void _exit(int status);
+    // 모든 리소스 정리,
+        할당된 메모리, 열린 파일, System V semaphore
+    모든 작업 종료시, 부모에게 알림
+
+app에서 직접 _exit()호출은 거의 하지 않음
+    하게 되면, 표준 출력 스트림 비우는 것과 같은 사후처리를 수동으로 해야함
+
+vfork()사용시 exit()이 아닌 _exit()사용함
+
+#include<stdlib.h>
+void _Exit(int status); // c99이상에서 사용, _exit()과 동일함

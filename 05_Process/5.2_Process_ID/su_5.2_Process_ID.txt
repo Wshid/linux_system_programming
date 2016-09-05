@@ -1,0 +1,80 @@
+pid : 프로세스를 구분하는 유일한 식별자
+
+특정한 시점에서 유일한 값임을 보장함
+
+t+0     pid 770     타 프로세스는 pid 770을 받을 수 없음
+t+1     pid 770을 타 프로세스에게 할당 가능함
+
+대부분의 프로그램은 커널이
+    동일한 pid를 다시 할당하지 않으리라 가정함
+        -> pid는 변하지 않음
+
+동작중인 ps가 없을때
+
+idle    0   커널이 실행
+init    1   부팅이 끝나면 커널이 실행하는 최초 프로세스
+
+보통 init ps는 init program임
+    커널이 실행하는 최초 프로세스와 그 프로세스를 위한 프로그램 => init
+
+커널에 ps 실행 명시하지 않으면, 독자적으로 init 프로세스 강제 설정
+    1. /sbin/init
+    2. /etc/init
+    3. /bin/init
+    4. /bin/sh : 본셸(Bourne Shell ; bsh)
+        cf) bash는 Bourne Again Shell을 의미
+
+    -> 4가지 모두 실패시 커널 패닉
+        => windows의 blue screen
+
+커널로부터 제어권 넘겨 받은 후,
+    init ps는 나머지 부팅과정 진행
+        => 시스템 초기화, 다양한 서비스 구동, login 프로그램 실행
+        
+        
+===5.2.1_pid 할당
+pid.max=32768
+    signed 16bit integer max size
+
+    root 권한으로, /proc/sys/kernel/pid_max를 수정하여 더 많은 pid 설정 가능
+        -> 대신, 호환성이 떨어짐
+    
+    무조건 pid는 커널에 의해 순차적으로 설정 됨
+    pid_max값에 도달하여 다시 재순환 하지 않는 이상
+        지나온 것중 비어 있더라도 재사용  하지 않음
+    
+    -> 유일한 pid를 보장하지 않으나,
+        짧은 기간동안에는 안정적이고 유일한 pid 제공
+
+
+===5.2.2_Process_Layer
+
+parent ps // 특정 ps를 spawn(생성)
+=> child ps
+
+init ps를 제외한 나머지 ps는 parent ps가 존재
+    -> pid와 ppid의 관계에서 파악 가능
+
+모든 ps는 사용자와 그룹이 소유(ownership)함
+    -> 소유 : 리소스의 접근권한 제어
+
+    단순한 정수 값 (커널입장에서의 user/group)
+        -> /etc/passwd, /etc/group 파일을 통해 쉽게 읽을 수 있는 root, wheel등의 그룹이름으로 맵핑
+    
+    리눅스 커널은 사용자가 읽을 수 있는 이름이 아니라,
+        맵핑된 정수 값으로 객체를 식별하는 것을 선호
+    
+    모든 child ps는 parent ps의 user/group 권한을 상속 받음
+
+자식 ps는 부모 ps 프로세스 그룹에 속함 // 위의 사용자/그룹 권한과는 다른 개념
+셸에서 파이프 사용시, 파이프로 묶인 모든 명령어, 동일 프로세스 그룹에 속함
+
+프로세스 그룹
+    파이프라인 전체 및 파이프라인에 속한 ps의 모든 child ps에
+        시그널을 보내거나, 정보 취득이 쉽도록 함
+
+
+===5.2.3_pid_t
+    pid는 pid_t 자료형으로 표현됨
+    <sys/types.h> 헤더파일에 정의
+    보통 pid_t는 C의 int 자료형에 대한 typedef

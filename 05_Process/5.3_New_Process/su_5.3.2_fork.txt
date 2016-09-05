@@ -1,0 +1,30 @@
+현재 실행중인 ps와 동일한 ps 실행
+
+#include<sys/types.h>
+#include<unistd.h>
+
+pid_t fork(void);
+
+반환값
+    자식 ps : 0
+    부모 ps : child.pid
+
+child.pid!=parent.pid
+child.ppid=parent.pid
+child.ps에서 리소스 통계=0
+처리되지 않은 signal은 child ps로 상속되지 않음
+parent.ps의 file lock은 상속되지 않음
+
+fork 호출 실패시 자식 ps 생성되지 않음, -1, errno
+
+
+fork는 보통
+    새로운 ps 생성 후,
+        새 ps에 새로운 바이너리 이미지를 올릴때 사용
+
+셸이 사용자나, 헬퍼 프로그램으로부터
+    새로운 프로그램 실행하는 방식
+
+특정 ps에서 새로운 ps 생성 후
+    자식 ps에서 새로운 bin. image 생성
+        -> fork, exec 조합

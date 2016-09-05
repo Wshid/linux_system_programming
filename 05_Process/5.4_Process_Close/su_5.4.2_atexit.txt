@@ -1,0 +1,29 @@
+프로세스가 종료될 때 실행할 함수등록
+
+#include<stdlib.h>
+
+int atexit(void (*function)(void));
+
+정상 실행시,
+    exit(), main-return에서 호출할 함수를 등록함
+    exec함수 호출시 함수 목록을 비우기 때문에
+        새로운 ps 주소공간에는 더 이상 존재 x
+    SIG로 종료된 경우에도 호출되지 않음
+
+void my_function(void) // 이와 같이 아무런 인자, 리턴 값이 없어야 함
+
+등록된 함수는 역순으로 호출됨 // 스택에 저장되어 LIFO 구조를 가짐
+등록된 함수에서 exit()호출시 무한 루프에 빠지게 됨,
+    일찍 종료시 _exit() 사용 -> 중요한 함수 미실행 가능성 -> 추천하지 않음
+
+ATEXIT_MAX만큼의 함수 등록이 가능하며, 기본적으로 32 이상임
+
+sysconf()에서 _SC_ATEXIT_MAX에서 얻을 수 있음
+
+long atexit_max;
+
+atexit_max=sysconf(_SC_ATEXIT_MAX);
+printf("atexit_max=%ld\n", atexit_max);
+
+
+함수 등록이 성공하면 0, 실패시 -1

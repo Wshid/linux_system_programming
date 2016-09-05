@@ -1,0 +1,28 @@
+sunOS에서 atexit()와 동일한 함수 구현
+glibc에서도 지원함
+
+#include<stdlib.h>
+
+int on_exit (void (*function)(int, void *), void *arg);
+동일하게 동작하나, 등록할 수 잇는 프로토타입이 다름
+
+void my_function(int status, void *arg);
+    status는 exti()로 전달되거나,
+        main-return 값임
+    
+    arg : 가리키는 메모리는 등록된 함수가 실제로 호출되는 시점에서 유효함
+
+
+===5.4.4 SIGCHLD
+
+프로세스 종료시, 커널은 SIGCHLD 시그널을 부모 ps에 보냄
+
+부모는 일반적으로 SIG를 무시하며, 아무런 행동도 하지 않음
+
+ps는 signal()이나 singaction()으로 시그널 처리가 가능함
+
+부모 ps에서 자식 ps의 종료가 비동기로 일어나므로
+    SIGCHLD는 언제든 생성되고, 처리가 가능함
+
+부모 ps에서 자식 ps의 종료를 알아야하거나, 이벤트 발생을 기다릴때는
+    특정 시스템콜을 활용하여 처리가 가능하다
